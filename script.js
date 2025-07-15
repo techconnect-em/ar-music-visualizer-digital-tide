@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let bars = [];
     let isLyricsVisible = false;
 
-    // 3Dパーティクルシステムの定数
-    const PARTICLE_COUNT = 50000;
+    // 3Dパーティクルシステムの定数（視認性向上のため最適化）
+    const PARTICLE_COUNT = 15000; // 50000から15000に削減
     const SHAPE_STABLE_TIME = 4000; // 4秒
     const MORPHING_TIME = 2000; // 2秒
     const ANIMATION_CYCLE = SHAPE_STABLE_TIME + MORPHING_TIME; // 6秒
@@ -110,17 +110,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const a = 3, b = 5, c = 7; // 周波数
         const A = 2, B = 2, C = 2; // 振幅
         const delta1 = Math.PI / 2, delta2 = Math.PI / 4; // 位相
+        const thicknessRadius = 0.08; // 線の太さ
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
-            const t = Math.random() * Math.PI * 2; // [0, 2π]
+            const t = (i / PARTICLE_COUNT) * Math.PI * 4; // より均等な分布
             
-            const x = A * Math.sin(a * t + delta1);
-            const y = B * Math.sin(b * t);
-            const z = C * Math.sin(c * t + delta2);
+            // 基本のリサージュカーブ
+            const baseX = A * Math.sin(a * t + delta1);
+            const baseY = B * Math.sin(b * t);
+            const baseZ = C * Math.sin(c * t + delta2);
             
-            positions[i * 3] = x;
-            positions[i * 3 + 1] = y;
-            positions[i * 3 + 2] = z;
+            // 線の太さを作るためのランダムオフセット
+            const offsetAngle = Math.random() * Math.PI * 2;
+            const offsetRadius = Math.random() * thicknessRadius;
+            
+            // 法線方向にオフセットを追加（簡易的な方法）
+            const offsetX = Math.cos(offsetAngle) * offsetRadius;
+            const offsetY = Math.sin(offsetAngle) * offsetRadius;
+            
+            positions[i * 3] = baseX + offsetX;
+            positions[i * 3 + 1] = baseY + offsetY;
+            positions[i * 3 + 2] = baseZ;
         }
         
         return positions;
@@ -196,11 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 形状の色定義
+    // 形状の色定義（視認性向上のため明度調整）
     const shapeColors = {
-        TORUS: { r: 1.0, g: 1.0, b: 1.0 },    // 白
-        SPHERE: { r: 0.0, g: 1.0, b: 1.0 },   // シアン
-        LISSAJOUS: { r: 1.0, g: 0.0, b: 1.0 } // マゼンタ
+        TORUS: { r: 1.0, g: 1.0, b: 1.0 },      // 明るい白
+        SPHERE: { r: 0.3, g: 1.0, b: 1.0 },     // 明るいシアン
+        LISSAJOUS: { r: 1.0, g: 0.4, b: 1.0 }   // 明るいマゼンタ
     };
 
     // パーティクルシステムの初期化
@@ -228,13 +238,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
         
-        // マテリアルの作成
+        // マテリアルの作成（視認性向上のため大きく明るく）
         particleMaterial = new THREE.PointsMaterial({
-            size: 0.015,
+            size: 0.04, // 0.015から0.04に拡大
             sizeAttenuation: true,
             vertexColors: true,
             blending: THREE.AdditiveBlending,
-            transparent: true
+            transparent: true,
+            opacity: 0.9 // 明度向上
         });
         
         // パーティクルシステムの作成
@@ -283,29 +294,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // パフォーマンスレベルに応じた設定取得
+    // パフォーマンスレベルに応じた設定取得（15000パーティクル用に最適化）
     function getPerformanceSettings() {
         switch (performanceLevel) {
             case 'low':
                 return {
                     updateFrequency: 33, // 30FPS
-                    batchSize: 2000,
-                    colorBatchSize: 10000,
+                    batchSize: 1000, // 15000パーティクル用に調整
+                    colorBatchSize: 5000,
                     noiseScale: 0.03
                 };
             case 'medium':
                 return {
                     updateFrequency: 22, // 45FPS
-                    batchSize: 1500,
-                    colorBatchSize: 7500,
+                    batchSize: 750,
+                    colorBatchSize: 3750,
                     noiseScale: 0.04
                 };
             case 'high':
             default:
                 return {
                     updateFrequency: 16, // 60FPS
-                    batchSize: 1000,
-                    colorBatchSize: 5000,
+                    batchSize: 500, // より小さなバッチで滑らかに
+                    colorBatchSize: 2500,
                     noiseScale: 0.05
                 };
         }
