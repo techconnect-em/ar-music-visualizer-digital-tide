@@ -615,6 +615,151 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('A-Frame scene error:', e);
     });
 
+    // iOS対応: MindARのビデオ要素にplaysinline属性を追加
+    function ensurePlaysinlineForMindAR() {
+        console.log('🍎 Ensuring playsinline for iOS compatibility...');
+        
+        // MindARが生成するビデオ要素を監視
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        // ビデオ要素を探す
+                        const videos = node.tagName === 'VIDEO' ? [node] : node.querySelectorAll ? node.querySelectorAll('video') : [];
+                        videos.forEach((video) => {
+                            if (!video.hasAttribute('playsinline')) {
+                                video.setAttribute('playsinline', '');
+                                video.setAttribute('webkit-playsinline', '');
+                                console.log('✅ Added playsinline to video element:', video);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        
+        // documentの変更を監視
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // 5秒後に監視を停止
+        setTimeout(() => {
+            observer.disconnect();
+            console.log('🛑 Stopped video element monitoring');
+        }, 5000);
+    }
+
+    // iOS検出とplaysinline対応
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+        console.log('📱 iOS device detected, applying compatibility fixes...');
+        ensurePlaysinlineForMindAR();
+        
+        // iOS用のタップ・トゥ・スタート機能
+        setupIOSTapToStart();
+    }
+
+    // iOS用のタップ・トゥ・スタート機能
+    function setupIOSTapToStart() {
+        let hasUserInteracted = false;
+        
+        function handleFirstInteraction() {
+            if (hasUserInteracted) return;
+            hasUserInteracted = true;
+            
+            console.log('👆 User interaction detected, initializing AR for iOS...');
+            
+            // MindARシーンを強制的に再初期化
+            setTimeout(() => {
+                try {
+                    // 既存のビデオ要素にplaysinline属性を再適用
+                    const videos = document.querySelectorAll('video');
+                    videos.forEach(video => {
+                        video.setAttribute('playsinline', '');
+                        video.setAttribute('webkit-playsinline', '');
+                        
+                        // ビデオが一時停止されている場合は再生を試行
+                        if (video.paused && video.readyState >= 2) {
+                            video.play().catch(err => {
+                                console.log('Video play attempt failed:', err);
+                            });
+                        }
+                    });
+                    
+                    console.log('🔄 iOS AR re-initialization complete');
+                } catch (error) {
+                    console.error('❌ iOS AR initialization error:', error);
+                }
+            }, 500);
+            
+            // イベントリスナーを削除
+            document.removeEventListener('touchstart', handleFirstInteraction);
+            document.removeEventListener('click', handleFirstInteraction);
+        }
+        
+        // タッチとクリックの両方を監視
+        document.addEventListener('touchstart', handleFirstInteraction, { passive: true });
+        document.addEventListener('click', handleFirstInteraction);
+        
+        console.log('📱 iOS tap-to-start system activated');
+    }
+
+    // iOSでのカメラストリーム診断機能
+    function diagnoseIOSCameraStream() {
+        if (!isIOS) return;
+        
+        console.log('🔍 Starting iOS camera stream diagnosis...');
+        
+        // 定期的にビデオ要素の状態をチェック
+        const diagnosticInterval = setInterval(() => {
+            const videos = document.querySelectorAll('video');
+            
+            videos.forEach((video, index) => {
+                console.log(`📹 Video ${index} status:`, {
+                    src: video.src || 'No src',
+                    srcObject: video.srcObject ? 'Stream object present' : 'No stream',
+                    readyState: video.readyState,
+                    paused: video.paused,
+                    playsinline: video.hasAttribute('playsinline'),
+                    webkitPlaysinline: video.hasAttribute('webkit-playsinline'),
+                    width: video.videoWidth,
+                    height: video.videoHeight,
+                    style: {
+                        display: video.style.display,
+                        visibility: video.style.visibility,
+                        opacity: video.style.opacity
+                    }
+                });
+            });
+            
+            // A-Frame canvasの状態もチェック
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                console.log('🎨 Canvas status:', {
+                    width: canvas.width,
+                    height: canvas.height,
+                    style: {
+                        display: canvas.style.display,
+                        visibility: canvas.style.visibility
+                    }
+                });
+            }
+        }, 3000); // 3秒ごと
+        
+        // 30秒後に診断を停止
+        setTimeout(() => {
+            clearInterval(diagnosticInterval);
+            console.log('🛑 iOS camera stream diagnosis complete');
+        }, 30000);
+    }
+
+    // iOS診断を5秒後に開始
+    if (isIOS) {
+        setTimeout(diagnoseIOSCameraStream, 5000);
+    }
+
     audio.addEventListener('play', updateAudioButton);
     audio.addEventListener('pause', updateAudioButton);
 
