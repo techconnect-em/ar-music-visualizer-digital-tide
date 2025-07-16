@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // マテリアルの作成（明るい背景での視認性向上）
         particleMaterial = new THREE.PointsMaterial({
-            size: 0.10, // 0.08から0.10に拡大（さらに大きく）
+            size: 1.0, // 0.10から1.0に大幅拡大
             sizeAttenuation: true,
             vertexColors: true,
             blending: THREE.NormalBlending, // AdditiveBlendingから変更
