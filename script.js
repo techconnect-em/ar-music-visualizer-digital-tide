@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLyricsVisible = false;
 
     // 3Dパーティクルシステムの定数（視認性向上のため最適化）
-    const PARTICLE_COUNT = 7500; // 15000から7500に削減（半分）
+    const PARTICLE_COUNT = 50000; // 密度を高めて視認性向上
     const SHAPE_STABLE_TIME = 4000; // 4秒
     const MORPHING_TIME = 2000; // 2秒
     const ANIMATION_CYCLE = SHAPE_STABLE_TIME + MORPHING_TIME; // 6秒
