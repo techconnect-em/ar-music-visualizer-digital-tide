@@ -39,6 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let torusPositions = null;
     let spherePositions = null;
     let lissajousPositions = null;
+    let dnaHelixPositions = null;
+    let fractalCubePositions = null;
+    let galaxySpiralPositions = null;
+    let waveFormPositions = null;
     
     // アニメーション状態
     let currentShape = 'TORUS';
@@ -46,6 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let morphProgress = 0;
     let animationStartTime = 0;
     let isStable = true;
+    
+    // リッチアニメーション状態
+    let globalRotation = { x: 0, y: 0, z: 0 };
+    let pulsePhase = 0;
+    let colorWavePhase = 0;
+    let rotationSpeed = 0.008;
     
     // パフォーマンス最適化用変数
     let lastUpdateTime = 0;
@@ -136,6 +146,133 @@ document.addEventListener('DOMContentLoaded', () => {
         return positions;
     }
 
+    // DNA螺旋の生成
+    function generateDnaHelixPositions() {
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        const R = 1.5; // 螺旋の半径
+        const height = 4; // 螺旋の高さ
+        const turns = 3; // 螺旋の回転数
+        const thicknessRadius = 0.05; // 線の太さ
+        
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const t = (i / PARTICLE_COUNT) * turns * Math.PI * 2;
+            const y = (i / PARTICLE_COUNT) * height - height / 2;
+            
+            // 二重螺旋の計算
+            const strand = Math.floor(i / (PARTICLE_COUNT / 2));
+            const offset = strand * Math.PI;
+            
+            const baseX = R * Math.cos(t + offset);
+            const baseZ = R * Math.sin(t + offset);
+            
+            // 線の太さのためのランダムオフセット
+            const offsetAngle = Math.random() * Math.PI * 2;
+            const offsetRadius = Math.random() * thicknessRadius;
+            const offsetX = Math.cos(offsetAngle) * offsetRadius;
+            const offsetZ = Math.sin(offsetAngle) * offsetRadius;
+            
+            positions[i * 3] = baseX + offsetX;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = baseZ + offsetZ;
+        }
+        
+        return positions;
+    }
+
+    // フラクタルキューブの生成
+    function generateFractalCubePositions() {
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        const size = 2.0; // 基本サイズ
+        const levels = 3; // フラクタルレベル
+        
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            let x = 0, y = 0, z = 0;
+            let currentSize = size;
+            
+            // フラクタル構造を生成
+            for (let level = 0; level < levels; level++) {
+                const subdivide = Math.pow(2, level);
+                const localSize = currentSize / subdivide;
+                
+                // ランダムな位置を選択
+                const localX = (Math.random() - 0.5) * localSize;
+                const localY = (Math.random() - 0.5) * localSize;
+                const localZ = (Math.random() - 0.5) * localSize;
+                
+                x += localX;
+                y += localY;
+                z += localZ;
+                
+                currentSize *= 0.5;
+            }
+            
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+        }
+        
+        return positions;
+    }
+
+    // 銀河渦巻きの生成
+    function generateGalaxySpiralPositions() {
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        const arms = 3; // 渦巻きの腕の数
+        const maxRadius = 3.0; // 最大半径
+        const pitch = 0.3; // 渦巻きの角度
+        
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const armIndex = i % arms;
+            const t = (i / PARTICLE_COUNT) * Math.PI * 4;
+            const radius = (i / PARTICLE_COUNT) * maxRadius;
+            
+            // 渦巻きの角度計算
+            const angle = t + (armIndex * Math.PI * 2 / arms) + (radius * pitch);
+            
+            const x = radius * Math.cos(angle);
+            const z = radius * Math.sin(angle);
+            
+            // Y軸方向の分布（平たい銀河）
+            const y = (Math.random() - 0.5) * 0.2 * radius;
+            
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+        }
+        
+        return positions;
+    }
+
+    // 波形の生成
+    function generateWaveFormPositions() {
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        const width = 4.0; // 波の幅
+        const amplitude = 1.5; // 振幅
+        const frequency = 2.0; // 周波数
+        const waveCount = 5; // 波の数
+        
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const t = (i / PARTICLE_COUNT) * Math.PI * 2 * waveCount;
+            const x = (i / PARTICLE_COUNT) * width - width / 2;
+            
+            // 複数の波を重ね合わせ
+            const wave1 = Math.sin(t) * amplitude;
+            const wave2 = Math.sin(t * 2 + Math.PI / 3) * amplitude * 0.5;
+            const wave3 = Math.sin(t * 3 + Math.PI / 6) * amplitude * 0.25;
+            
+            const y = wave1 + wave2 + wave3;
+            
+            // Z軸方向の分布
+            const z = Math.sin(t * frequency) * 0.3;
+            
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+        }
+        
+        return positions;
+    }
+
     // EaseInOutSine イージング関数
     function easeInOutSine(x) {
         return -(Math.cos(Math.PI * x) - 1) / 2;
@@ -210,7 +347,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const shapeColors = {
         TORUS: { r: 1.0, g: 1.0, b: 0.0 },      // 明るい黄色（青背景の補色）
         SPHERE: { r: 1.0, g: 0.5, b: 0.0 },     // 明るいオレンジ
-        LISSAJOUS: { r: 1.0, g: 0.0, b: 0.5 }   // 明るいピンク
+        LISSAJOUS: { r: 1.0, g: 0.0, b: 0.5 },  // 明るいピンク
+        DNA_HELIX: { r: 0.0, g: 1.0, b: 0.2 },  // 明るいグリーン
+        FRACTAL_CUBE: { r: 0.8, g: 0.0, b: 1.0 }, // 明るい紫
+        GALAXY_SPIRAL: { r: 0.0, g: 0.8, b: 1.0 }, // 明るいシアン
+        WAVE_FORM: { r: 1.0, g: 0.2, b: 0.0 }   // 明るい赤
     };
 
     // パーティクルシステムの初期化
@@ -221,6 +362,10 @@ document.addEventListener('DOMContentLoaded', () => {
         torusPositions = generateTorusPositions();
         spherePositions = generateSpherePositions();
         lissajousPositions = generateLissajousPositions();
+        dnaHelixPositions = generateDnaHelixPositions();
+        fractalCubePositions = generateFractalCubePositions();
+        galaxySpiralPositions = generateGalaxySpiralPositions();
+        waveFormPositions = generateWaveFormPositions();
         
         // BufferGeometry の作成
         particleGeometry = new THREE.BufferGeometry();
@@ -257,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // アニメーション状態管理
     function getNextShape(current) {
-        const shapes = ['TORUS', 'SPHERE', 'LISSAJOUS'];
+        const shapes = ['TORUS', 'SPHERE', 'LISSAJOUS', 'DNA_HELIX', 'FRACTAL_CUBE', 'GALAXY_SPIRAL', 'WAVE_FORM'];
         const currentIndex = shapes.indexOf(current);
         return shapes[(currentIndex + 1) % shapes.length];
     }
@@ -267,6 +412,10 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'TORUS': return torusPositions;
             case 'SPHERE': return spherePositions;
             case 'LISSAJOUS': return lissajousPositions;
+            case 'DNA_HELIX': return dnaHelixPositions;
+            case 'FRACTAL_CUBE': return fractalCubePositions;
+            case 'GALAXY_SPIRAL': return galaxySpiralPositions;
+            case 'WAVE_FORM': return waveFormPositions;
             default: return torusPositions;
         }
     }
@@ -343,6 +492,23 @@ document.addEventListener('DOMContentLoaded', () => {
         lastUpdateTime = currentTime;
         frameSkipCounter = 0;
         
+        // リッチアニメーションの更新
+        const time = currentTime * 0.001;
+        globalRotation.x += rotationSpeed * 0.7;
+        globalRotation.y += rotationSpeed;
+        globalRotation.z += rotationSpeed * 0.3;
+        pulsePhase += 0.08;
+        colorWavePhase += 0.05;
+        
+        // パーティクルシステム全体の回転
+        particleSystem.rotation.x = globalRotation.x;
+        particleSystem.rotation.y = globalRotation.y;
+        particleSystem.rotation.z = globalRotation.z;
+        
+        // パーティクルサイズの動的変化
+        const pulseSize = 20.0 + Math.sin(pulsePhase) * 5.0;
+        particleMaterial.size = pulseSize;
+        
         const cycleTime = (currentTime - animationStartTime) % ANIMATION_CYCLE;
         
         if (cycleTime < SHAPE_STABLE_TIME) {
@@ -414,9 +580,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 for (let i = batch; i < endIndex; i++) {
                     const i3 = i * 3;
-                    particleColors[i3] = lerpedColor.r;
-                    particleColors[i3 + 1] = lerpedColor.g;
-                    particleColors[i3 + 2] = lerpedColor.b;
+                    
+                    // 色の波動効果を追加
+                    const waveOffset = Math.sin(colorWavePhase + i * 0.01) * 0.2;
+                    const gradientFactor = Math.sin(i * 0.005 + time) * 0.3;
+                    
+                    particleColors[i3] = Math.min(1.0, lerpedColor.r + waveOffset + gradientFactor);
+                    particleColors[i3 + 1] = Math.min(1.0, lerpedColor.g + waveOffset * 0.7 + gradientFactor);
+                    particleColors[i3 + 2] = Math.min(1.0, lerpedColor.b + waveOffset * 0.5 + gradientFactor);
                 }
             }
             
