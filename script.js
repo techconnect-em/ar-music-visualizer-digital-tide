@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLyricsVisible = false;
 
     // 3Dパーティクルシステムの定数（視認性向上のため最適化）
-    const PARTICLE_COUNT = 15000; // 50000から15000に削減
+    const PARTICLE_COUNT = 7500; // 15000から7500に削減（半分）
     const SHAPE_STABLE_TIME = 4000; // 4秒
     const MORPHING_TIME = 2000; // 2秒
     const ANIMATION_CYCLE = SHAPE_STABLE_TIME + MORPHING_TIME; // 6秒
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // マテリアルの作成（視認性向上のため大きく明るく）
         particleMaterial = new THREE.PointsMaterial({
-            size: 0.04, // 0.015から0.04に拡大
+            size: 0.08, // 0.04から0.08に拡大（倍サイズ）
             sizeAttenuation: true,
             vertexColors: true,
             blending: THREE.AdditiveBlending,
