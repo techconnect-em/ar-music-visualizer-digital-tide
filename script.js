@@ -206,11 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 形状の色定義（視認性向上のため明度調整）
+    // 形状の色定義（明るい背景での視認性向上のため調整）
     const shapeColors = {
-        TORUS: { r: 1.0, g: 1.0, b: 1.0 },      // 明るい白
-        SPHERE: { r: 0.3, g: 1.0, b: 1.0 },     // 明るいシアン
-        LISSAJOUS: { r: 1.0, g: 0.4, b: 1.0 }   // 明るいマゼンタ
+        TORUS: { r: 1.0, g: 1.0, b: 0.0 },      // 明るい黄色（青背景の補色）
+        SPHERE: { r: 1.0, g: 0.5, b: 0.0 },     // 明るいオレンジ
+        LISSAJOUS: { r: 1.0, g: 0.0, b: 0.5 }   // 明るいピンク
     };
 
     // パーティクルシステムの初期化
@@ -238,14 +238,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
         
-        // マテリアルの作成（視認性向上のため大きく明るく）
+        // マテリアルの作成（明るい背景での視認性向上）
         particleMaterial = new THREE.PointsMaterial({
-            size: 0.08, // 0.04から0.08に拡大（倍サイズ）
+            size: 0.10, // 0.08から0.10に拡大（さらに大きく）
             sizeAttenuation: true,
             vertexColors: true,
-            blending: THREE.AdditiveBlending,
+            blending: THREE.NormalBlending, // AdditiveBlendingから変更
             transparent: true,
-            opacity: 0.9 // 明度向上
+            opacity: 0.95 // NormalBlendingに合わせて調整
         });
         
         // パーティクルシステムの作成
