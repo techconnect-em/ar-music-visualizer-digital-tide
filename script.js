@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateCubicLatticePositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
         const gridSize = 8; // 格子のサイズ
-        const spacing = 0.5; // 格子間隔
+        const spacing = 0.3; // 格子間隔を縮小 (0.5 → 0.3)
         const range = gridSize * spacing / 2;
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
@@ -103,9 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generatePlasmaRingPositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const innerRadius = 1.2;
-        const outerRadius = 2.5;
-        const height = 0.8;
+        const innerRadius = 0.7; // 1.2 → 0.7に縮小
+        const outerRadius = 1.5; // 2.5 → 1.5に縮小
+        const height = 0.5; // 0.8 → 0.5に縮小
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -129,8 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateDigitalVortexPositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const maxRadius = 2.5;
-        const height = 6;
+        const maxRadius = 1.5; // 2.5 → 1.5に縮小
+        const height = 3.6; // 6 → 3.6に縮小
         const turns = 4;
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
@@ -152,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateHologramPlanePositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const size = 4;
-        const waveHeight = 1.2;
+        const size = 2.4; // 4 → 2.4に縮小
+        const waveHeight = 0.7; // 1.2 → 0.7に縮小
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const x = (Math.random() - 0.5) * size;
@@ -177,8 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateDataStreamPositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
         const streamCount = 12;
-        const streamLength = 5;
-        const streamRadius = 2.2;
+        const streamLength = 3; // 5 → 3に縮小
+        const streamRadius = 1.3; // 2.2 → 1.3に縮小
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const streamIndex = Math.floor(Math.random() * streamCount);
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateCrystalStructurePositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const size = 2.8;
+        const size = 1.7; // 2.8 → 1.7に縮小
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             // 正四面体や立方体の結晶構造をベースに
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateQuantumCloudPositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const cloudSize = 3.0;
+        const cloudSize = 1.8; // 3.0 → 1.8に縮小
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             // ガウス分布による確率雲
@@ -388,9 +388,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
         
-        // マテリアルの作成（明るい背景での視認性向上）
+        // マテリアルの作成（適正サイズで形状認識性向上）
         particleMaterial = new THREE.PointsMaterial({
-            size: 20.0, // 1.0から20.0に大幅拡大
+            size: 8.0, // 20.0から8.0に適正化（形状が見やすいサイズ）
             sizeAttenuation: true,
             vertexColors: true,
             blending: THREE.NormalBlending, // AdditiveBlendingから変更
@@ -520,12 +520,12 @@ document.addEventListener('DOMContentLoaded', () => {
         particleSystem.rotation.y = globalRotation.y + glitchIntensity * (Math.random() - 0.5);
         particleSystem.rotation.z = globalRotation.z + glitchIntensity * (Math.random() - 0.5);
         
-        // 音楽連動パーティクルサイズ（低音域＋通常パルス＋グリッチ）
-        const musicPulse = audioBass * 15.0; // 低音域で大きくパルス
-        const basePulse = Math.sin(pulsePhase) * 8.0;
-        const glitchPulse = glitchIntensity * 15.0;
-        const pulseSize = 20.0 + basePulse + musicPulse + glitchPulse;
-        particleMaterial.size = Math.max(5.0, pulseSize); // 最小サイズ保証
+        // 音楽連動パーティクルサイズ（適正範囲に調整）
+        const musicPulse = audioBass * 6.0; // 低音域でパルス（15.0→6.0に縮小）
+        const basePulse = Math.sin(pulsePhase) * 3.0; // 通常パルス（8.0→3.0に縮小）
+        const glitchPulse = glitchIntensity * 6.0; // グリッチパルス（15.0→6.0に縮小）
+        const pulseSize = 8.0 + basePulse + musicPulse + glitchPulse; // ベースサイズ（20.0→8.0）
+        particleMaterial.size = Math.max(3.0, pulseSize); // 最小サイズ保証（5.0→3.0）
         
         const cycleTime = (currentTime - animationStartTime) % ANIMATION_CYCLE;
         
