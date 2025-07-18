@@ -129,15 +129,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateDigitalVortexPositions() {
         const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const maxRadius = 1.5; // 2.5 → 1.5に縮小
-        const height = 3.6; // 6 → 3.6に縮小
-        const turns = 4;
+        const maxRadius = 1.5;
+        const minRadius = 0.1; // 中心に向かって細くなる
+        const height = 3.6;
+        const turns = 3.5; // 4 → 3.5に調整（より滑らか）
         
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const t = i / PARTICLE_COUNT;
-            const y = t * height - height / 2;
-            const angle = t * turns * Math.PI * 2;
-            const radius = maxRadius * (1 - t) * (0.5 + Math.sin(t * Math.PI * 8) * 0.3);
+            
+            // より滑らかな高さ分布（中央密度を高く）
+            const densityFactor = Math.sin(t * Math.PI); // 0から1でベル型分布
+            const adjustedT = t * (0.7 + densityFactor * 0.3); // 中央により多く配置
+            const y = adjustedT * height - height / 2;
+            
+            // 滑らかな螺旋角度
+            const angle = adjustedT * turns * Math.PI * 2;
+            
+            // 自然な半径減衰（指数的減衰で滑らか）
+            const radiusDecay = Math.pow(1 - adjustedT, 1.2); // よりゆるやかな減衰
+            const baseRadius = minRadius + (maxRadius - minRadius) * radiusDecay;
+            
+            // 微細な揺らぎ（控えめで自然）
+            const gentleVariation = 1 + Math.sin(adjustedT * Math.PI * 6) * 0.05; // 0.3 → 0.05に大幅縮小
+            const radius = baseRadius * gentleVariation;
             
             const x = radius * Math.cos(angle);
             const z = radius * Math.sin(angle);
