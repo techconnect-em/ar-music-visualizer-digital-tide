@@ -68,6 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastFpsTime = 0;
     let currentFps = 60;
     let performanceLevel = 'high'; // 'high', 'medium', 'low'
+    
+    // 音楽連動用グローバル変数
+    let currentAudioData = null;
+    let audioAverage = 0;
+    let audioBass = 0;
+    let audioMid = 0;
+    let audioTreble = 0;
 
     // 歌詞の初期状態設定
     isLyricsVisible = false;
@@ -493,17 +500,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // リッチアニメーションの更新
         const time = currentTime * 0.001;
         
-        // デジタル系高速回転（3軸異なる速度）
-        globalRotation.x += rotationSpeed * 1.2;
-        globalRotation.y += rotationSpeed * 1.8;
-        globalRotation.z += rotationSpeed * 0.6;
-        pulsePhase += 0.12; // 高速パルス
-        colorWavePhase += 0.08; // 高速色変化
+        // 音楽連動回転速度（中音域でブースト）
+        const musicBoost = 1.0 + audioMid * 2.0; // 中音域で最大3倍速
+        globalRotation.x += rotationSpeed * 1.2 * musicBoost;
+        globalRotation.y += rotationSpeed * 1.8 * musicBoost;
+        globalRotation.z += rotationSpeed * 0.6 * musicBoost;
+        pulsePhase += 0.12 + audioAverage * 0.1; // 音楽全体でパルス速度調整
+        colorWavePhase += 0.08 + audioTreble * 0.15; // 高音域で色変化加速
         
-        // グリッチエフェクト（ランダムに発生）
+        // 音楽連動グリッチエフェクト（音楽が激しいほど頻発）
         let glitchIntensity = 0;
-        if (Math.random() < 0.02) { // 2%の確率でグリッチ
-            glitchIntensity = Math.random() * 0.3;
+        const glitchChance = 0.01 + audioAverage * 0.05; // 音楽に応じて1-6%の確率
+        if (Math.random() < glitchChance) {
+            glitchIntensity = Math.random() * (0.3 + audioBass * 0.4); // 低音域でより激しく
         }
         
         // パーティクルシステム全体の回転（グリッチ効果込み）
@@ -511,9 +520,12 @@ document.addEventListener('DOMContentLoaded', () => {
         particleSystem.rotation.y = globalRotation.y + glitchIntensity * (Math.random() - 0.5);
         particleSystem.rotation.z = globalRotation.z + glitchIntensity * (Math.random() - 0.5);
         
-        // パーティクルサイズの動的変化（より激しく）
-        const pulseSize = 20.0 + Math.sin(pulsePhase) * 8.0 + glitchIntensity * 15.0;
-        particleMaterial.size = pulseSize;
+        // 音楽連動パーティクルサイズ（低音域＋通常パルス＋グリッチ）
+        const musicPulse = audioBass * 15.0; // 低音域で大きくパルス
+        const basePulse = Math.sin(pulsePhase) * 8.0;
+        const glitchPulse = glitchIntensity * 15.0;
+        const pulseSize = 20.0 + basePulse + musicPulse + glitchPulse;
+        particleMaterial.size = Math.max(5.0, pulseSize); // 最小サイズ保証
         
         const cycleTime = (currentTime - animationStartTime) % ANIMATION_CYCLE;
         
@@ -531,9 +543,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(`Starting morphing from ${currentShape} to ${nextShape}`);
             }
             
-            // モーフィング進捗計算
+            // 音楽連動モーフィング進捗計算（音楽に応じて加速）
             const morphTime = cycleTime - SHAPE_STABLE_TIME;
-            morphProgress = Math.min(morphTime / MORPHING_TIME, 1);
+            const musicAcceleration = 1.0 + audioAverage * 1.5; // 音楽強度で最大2.5倍速
+            morphProgress = Math.min((morphTime * musicAcceleration) / MORPHING_TIME, 1);
             
             // デジタル系イージング適用（ステップ的な動き）
             const easedProgress = digitalEasing(morphProgress);
@@ -719,6 +732,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const freqByteData = new Uint8Array(analyser.frequencyBinCount);
                 analyser.getByteFrequencyData(freqByteData);
 
+                // 3Dパーティクル用の音楽データを更新
+                this.updateAudioDataForParticles(freqByteData);
+
                 // スフィアのスケールを変更
                 let avgScale = 0;
                 for (let i = 0; i < freqByteData.length; i++) {
@@ -731,6 +747,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 // イコライザーバーの更新
                 this.updateEqualizerBars(freqByteData);
             }
+        },
+        
+        updateAudioDataForParticles: function(freqByteData) {
+            // 音楽データをグローバル変数に保存
+            currentAudioData = freqByteData;
+            
+            // 全体の平均音量
+            let total = 0;
+            for (let i = 0; i < freqByteData.length; i++) {
+                total += freqByteData[i];
+            }
+            audioAverage = total / freqByteData.length / 255; // 0-1の範囲に正規化
+            
+            // 低音域 (0-21Hz相当)
+            let bassTotal = 0;
+            const bassRange = Math.floor(freqByteData.length * 0.1);
+            for (let i = 0; i < bassRange; i++) {
+                bassTotal += freqByteData[i];
+            }
+            audioBass = bassTotal / bassRange / 255;
+            
+            // 中音域 (21-500Hz相当)
+            let midTotal = 0;
+            const midStart = bassRange;
+            const midEnd = Math.floor(freqByteData.length * 0.5);
+            for (let i = midStart; i < midEnd; i++) {
+                midTotal += freqByteData[i];
+            }
+            audioMid = midTotal / (midEnd - midStart) / 255;
+            
+            // 高音域 (500Hz以上)
+            let trebleTotal = 0;
+            const trebleStart = midEnd;
+            for (let i = trebleStart; i < freqByteData.length; i++) {
+                trebleTotal += freqByteData[i];
+            }
+            audioTreble = trebleTotal / (freqByteData.length - trebleStart) / 255;
         },
         updateEqualizerBars: function (freqByteData) {
             try {
