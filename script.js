@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentTimeDisplay = document.getElementById('current-time');
     const durationDisplay = document.getElementById('duration');
 
+    // カメラとマーカーデータの準備を優先してから、音声を読み込む。
+    scene.addEventListener('arReady', () => {
+        // load() で先に押した再生ボタンやシーク位置をリセットしない。
+        audio.preload = 'auto';
+    }, { once: true });
+
     const FFT_SIZE = 256;
     const numBars = 32; // 固定のバーの数に変更
     let bars = [];

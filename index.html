@@ -3,7 +3,6 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-aframe.prod.js"></script>
     <link rel="stylesheet"
@@ -13,7 +12,7 @@
 
 <body>
     <div class="example-container">
-        <audio id="audio" preload="auto" loop crossorigin="anonymous">
+        <audio id="audio" preload="none" loop crossorigin="anonymous">
             <source
                 src="./assets/digital-tide.mp3"
                 type="audio/mpeg" />
@@ -23,11 +22,6 @@
             mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; warmupTolerance: 5; missTolerance: 15; filterMinCF: 0.001; filterBeta: 1000"
             embedded color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; precision: highp; logarithmicDepthBuffer: true;"
             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-            <a-assets>
-                <a-asset-item id="base-model"
-                    src="./assets/techconnect_3Dlogo.glb">
-                </a-asset-item>
-            </a-assets>
 
             <a-camera position="0 0 0" look-controls="enabled: false" camera="fov: 60; near: 0.1; far: 1000"></a-camera>
 
@@ -35,7 +29,7 @@
                 <a-sphere id="visualSphere" position="0 0 0" radius="0.55" color="blue" opacity="0.3"
                     material="metalness: 0.8; roughness: 0.2; transparent: true;">
                     <a-entity id="base-entity" position="0 -0.4 0" scale="0.4 0.4 0.4" rotation="0 0 0"
-                        gltf-model="#base-model"
+                        gltf-model="url(./assets/techconnect_3Dlogo.glb)"
                         animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
                     </a-entity>
                     <a-entity id="equalizer-container"></a-entity>
